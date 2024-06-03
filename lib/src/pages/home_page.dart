@@ -3,6 +3,7 @@ import 'package:bloc_casestudy/src/pages/bloc/todo_bloc.dart';
 import 'package:bloc_casestudy/src/pages/bloc/todo_event.dart';
 import 'package:bloc_casestudy/src/pages/bloc/todo_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,7 +19,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _todoBloc = TodoBloc();
-    _todoBloc.inputTodo.add(GetTodos());
+    _todoBloc.add(GetTodos());
   }
 
   @override
@@ -30,20 +31,20 @@ class _HomePageState extends State<HomePage> {
       title: const Text('Home'),),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
-        onPressed: () => _todoBloc.inputTodo.add(PostTodos(todo: TodoModel(name: 'Fazendo teste.')))),
-      body: StreamBuilder(
-        stream: _todoBloc.outputTodo, 
+        onPressed: () => _todoBloc.add(PostTodos(todo: TodoModel(name: 'Fazendo teste.')))),
+      body: BlocBuilder<TodoBloc, TodoState>(
+        bloc: _todoBloc, 
         builder: (context, state) {
-          if(state.data is TodoLoadingState) return const Center(child: CircularProgressIndicator(),);
-          if(state.data is TodoLoadedState) {
-            final list = state.data?.todos ?? [];
+          if(state is TodoLoadingState) return const Center(child: CircularProgressIndicator(),);
+          if(state is TodoLoadedState) {
+            final list = state.todos;
             return ListView.builder(
               itemCount: list.length,
               itemBuilder: (_, index) {
                 return ListTile(
                   title: Text(list[index].name), 
                   trailing: IconButton(
-                    onPressed: () => _todoBloc.inputTodo.add(DeleteTodo(todo: list[index])),
+                    onPressed: () => _todoBloc.add(DeleteTodo(todo: list[index])),
                     icon: const Icon(Icons.delete)),);
             },);
           }
@@ -54,7 +55,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    _todoBloc.inputTodo.close();
+    _todoBloc.close();
     super.dispose();
   }
 }
